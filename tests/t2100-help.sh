@@ -4,7 +4,6 @@
 test_description='help functionality
 This test covers the help output.
 '
-. ./actions-test-lib.sh
 . ./test-lib.sh
 
 # Note: To avoid having to adapt the test whenever the help documentation
