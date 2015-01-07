@@ -1,4 +1,4 @@
-Command Line Interface for forgettinGTD ![Build Status](https://travis-ci.org/forget-it/forgettinGTD-cli.svg)
+Command Line Interface for forgettinGTD ![Build Status](https://travis-ci.org/forget-it/forgettinGTD-cli.svg):http://www.google.com
 ================
 
 A simple and extensible shell script for managing your forgettingtd structure. Oriented on https://github.com/ginatrapani/todo.txt-cli
