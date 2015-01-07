@@ -474,13 +474,13 @@ test_init_todo () {
 	owd=`pwd`
 	root="$1"
 	mkdir -p "$root"
-	#ssc cd "$root" || error "Cannot setup todo dir in $root"
+	cd "$root" || error "Cannot setup todo dir in $root"
 	# Initialize the configuration file. Carefully quoted.
 	#ssc sed -e 's|TODO_DIR=.*$|TODO_DIR="'"$TEST_DIRECTORY/$test"'"|' $TEST_DIRECTORY/../todo.cfg > todo.cfg
 
 	# Install latest ftd.sh
 	mkdir bin
-	ln -s "$TEST_DIRECTORY/../tfd.sh" bin/tfd.sh
+	ln -s "$TEST_DIRECTORY/../ftd.sh" bin/ftd.sh
 
 	# Initialize a hack date script
 	TODO_TEST_REAL_DATE=$(which date)
@@ -542,7 +542,6 @@ test_init_todo () {
 	# Ensure a correct PATH for testing.
 	PATH=$owd/$root/bin:$PATH
 	export PATH
-
 	cd "$owd"
 }
 
