@@ -195,14 +195,17 @@ case $action in
 	shift
     [ -z "$1" ] && die "usage: $FTD_SH close <path to file/folder>"
     [ ! -e "$1" ] && die "$1 does not exist"
-    for actionname in $1
+    for actionname in $@
     do
-    	echo "Closing Action '$actionname'..."
-    	newactionname=$(printf "x %s %s" $(date +'%Y-%d-%m') "$actionname")
+    	action_foldername=$( dirname $actionname)
+    	action_filename=$( basename $actionname)
+    	echo "Closing Action '$action_filename' in Directory '$action_foldername'..."
+    	newactionname=$(printf "%s/x %s %s" "$action_foldername" $(date +'%Y-%d-%m') "$action_filename")
 	    if [ $FTD_VERBOSE -gt 0 ]; then
 	    	echo "Renaming from $actionname to $newactionname"
 	    fi
     	mv "$actionname" "$newactionname"
+    	#echo "mv $actionname $newactionname"
     done
     ;;
 "help" )
