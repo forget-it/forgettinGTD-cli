@@ -551,7 +551,7 @@ test_tick () {
 }
 
 # Generate and run a series of tests based on a transcript.
-# Usage: test_todo_session "description" <<'EOF'
+# Usage: test_ftd_session "description" <<'EOF'
 # >>> command
 # output1
 # output2
@@ -562,9 +562,9 @@ test_tick () {
 # \
 # output5
 # EOF
-test_todo_session () {
+test_ftd_session () {
     test "$#" = 1 ||
-    error "bug in the test script: extra args to test_todo_session"
+    error "bug in the test script: extra args to test_ftd_session"
     subnum=1
     cmd=""
     status=0
@@ -573,7 +573,7 @@ test_todo_session () {
     do
 	case $line in
 	">>> "*)
-	    test -z "$cmd" || error "bug in the test script: missing blank line separator in test_todo_session"
+	    test -z "$cmd" || error "bug in the test script: missing blank line separator in test_ftd_session"
 	    cmd=${line#>>> }
 	    ;;
 	"=== "*)

@@ -18,7 +18,7 @@ FTD_SH=$(basename "$0")
 FTD_FULL_SH="$0"
 export FTD_SH FTD_FULL_SH
 
-oneline_usage="$FTD_SH [-fhvV] action <path to file/folder>"
+oneline_usage="$FTD_SH [-efhvV] action <path to file/folder>"
 
 usage()
 {
@@ -35,7 +35,7 @@ shorthelp()
 		  Usage: $oneline_usage
 
 		  Actions:
-		    close|c <path to file/folder>
+		    done|d [-d <YYYY-MM-DD>] <path to file/folder>
 		    help [ACTION...]
 		    shorthelp
 	EndHelp
@@ -56,8 +56,10 @@ help()
 		        Display a short help message; same as action "shorthelp"
 		    -p
 		        Plain mode turns off colors
-		    -v
-		        Verbose mode turns on confirmation messages
+            -e
+                Emulates the actions taken by the script without doing any modification
+            -v
+                Verbose mode turns on confirmation messages
 		    -vv
 		        Extra verbose mode prints some debugging information and
 		        additional help text
@@ -68,7 +70,8 @@ help()
 
     [ $FTD_VERBOSE -gt 1 ] && cat <<-'EndVerboseHelp'
 		  Environment variables:
-		    FTD_FORCE=1                 is same as option -f
+            FTD_EMULATE=1               is same as option -e
+            FTD_FORCE=1                 is same as option -f
 		    FTD_PLAIN                   is same as option -p (1)/-c (0)
 		    TFD_VERBOSE=1               is same as option -v
 
@@ -81,12 +84,14 @@ actionsHelp()
 {
     cat <<-EndActionsHelp
 		  Actions:
-		    close <path to file/folder>
-		    c <path to file/folder>
+		    done [-d YYYY-MM-DD] <path to file/folder>
+		    d [-d YYYY-MM-DD] <path to file/folder>
 		      Marks an action as closed. 
 		      Choose action to close by path to file or folder.
 		      Allows Wildcards in name of file or folder.
 		      Already closed actions will be newly timestamped.
+              Use optional parameter -d to set a close date,
+              if parameter is not given current date will be used.
 	EndActionsHelp
 }
 
@@ -111,7 +116,18 @@ die()
     exit 1
 }
 
+execute()
+{
+    if [ $FTD_EMULATE = 1 ] ; then
+        echo "EMULATE: $1"
+    else
+        eval $1
+    fi
+}
+
+
 #Preserving environment variables so they don't get clobbered by the config file
+OVR_FTD_EMULATE="$FTD_EMULATE"
 OVR_FTD_FORCE="$FTD_FORCE"
 OVR_FTD_PLAIN="$FTD_PLAIN"
 OVR_FTD_VERBOSE="$FTD_VERBOSE"
@@ -120,11 +136,14 @@ OVR_FTD_VERBOSE="$FTD_VERBOSE"
 GREP_OPTIONS=""
 
 # == PROCESS OPTIONS ==
-while getopts ":fhcvV" Option
+while getopts ":efhcvV" Option
 do
   case $Option in
     c )
         OVR_FTD_PLAIN=0
+        ;;
+    e )
+        OVR_FTD_EMULATE=1
         ;;
     f )
         OVR_FTD_FORCE=1
@@ -146,9 +165,10 @@ done
 shift $(($OPTIND - 1))
 
 # defaults if not yet defined
-FTD_VERBOSE=${FTD_VERBOSE:-1}
 FTD_PLAIN=${FTD_PLAIN:-0}
+FTD_EMULATE=${FTD_EMULATE:-0}
 FTD_FORCE=${FTD_FORCE:-0}
+FTD_VERBOSE=${FTD_VERBOSE:-1}
 
 # Export all FTD_* variables
 export ${!FTD_@}
@@ -175,13 +195,16 @@ export DEFAULT='\\033[0m'
 
 # === APPLY OVERRIDES
 if [ -n "$OVR_FTD_FORCE" ] ; then
-  TODOTXT_FORCE="$OVR_FTD_FORCE"
+  FTD_FORCE="$OVR_FTD_FORCE"
 fi
 if [ -n "$OVR_FTD_PLAIN" ] ; then
-  TODOTXT_PLAIN="$OVR_FTD_PLAIN"
+  FTD_PLAIN="$OVR_FTD_PLAIN"
 fi
 if [ -n "$OVR_FTD_VERBOSE" ] ; then
-  TODOTXT_VERBOSE="$OVR_FTD_VERBOSE"
+  FTD_VERBOSE="$OVR_FTD_VERBOSE"
+fi
+if [ -n "$OVR_FTD_EMULATE" ] ; then
+  FTD_EMULATE="$OVR_FTD_EMULATE"
 fi
 
 ACTION=${1}
@@ -191,21 +214,30 @@ ACTION=${1}
 action=$( printf "%s\n" "$ACTION" | tr 'A-Z' 'a-z' )
 
 case $action in
-"close" | "c")
-	shift
-    [ -z "$1" ] && die "usage: $FTD_SH close <path to file/folder>"
+"done" | "d")
+	shift    # was "done" or "d", next is parameter or filename
+    [ -z "$1" ] && die "usage: $FTD_SH done [-d <YYYY-MM-DD>] <path to file/folder>"
+
+    donedate=$( date +'%Y-%d-%m' )   # default to current date
+    if [[ $1 == "-d" || $1 == "-D" ]]; then
+        shift       # shift parameter -d
+        donedate=$1
+        date -f "%Y-%d-%m" -j $donedate >/dev/null 2>&1
+        [ $? = 1 ] && die "Date '$donedate' is not a valid date in format YYYY-MM-DD"
+        shift       # shift date string
+    fi
     [ ! -e "$1" ] && die "$1 does not exist"
+    
     for actionname in $@
     do
     	action_foldername=$( dirname $actionname)
     	action_filename=$( basename $actionname)
     	echo "Closing Action '$action_filename' in Directory '$action_foldername'..."
-    	newactionname=$(printf "%s/x %s %s" "$action_foldername" $(date +'%Y-%d-%m') "$action_filename")
+    	newactionname=$(printf "%s/x %s %s" "$action_foldername" "$donedate" "$action_filename")
 	    if [ $FTD_VERBOSE -gt 0 ]; then
 	    	echo "Renaming from $actionname to $newactionname"
 	    fi
-    	mv "$actionname" "$newactionname"
-    	#echo "mv $actionname $newactionname"
+    	execute "mv '$actionname' '$newactionname'"
     done
     ;;
 "help" )
