@@ -34,8 +34,8 @@ install:
 	install --mode=755 ftd.sh $(INSTALL_DIR)
 	#ssc install --mode=644 todo_completion /etc/bash_completion.d/todo
 	#ssc mkdir -p /etc/todo
-	#ssc [ -e /etc/todo/config ] || \
-	#ssc	sed "s/^\(export[ \t]*TODO_DIR=\).*/\1~\/.todo/" todo.cfg > /etc/todo/config
+	[ -e /etc/ftd.cfg ] || \
+		sed "s/^\(export[ \t]*FTD_DIR=\).*/\1~\/ftd/" ftd.cfg > /etc/ftd.cfg
 #
 # Testing
 #

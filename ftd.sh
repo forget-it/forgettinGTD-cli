@@ -35,7 +35,8 @@ shorthelp()
 		  Usage: $oneline_usage
 
 		  Actions:
-		    done|d [-d <YYYY-MM-DD>] <path to file/folder>
+            done|d [-d <YYYY-MM-DD>] <path to file/folder>
+            inbox|i <path to file>
 		    help [ACTION...]
 		    shorthelp
 	EndHelp
@@ -84,14 +85,20 @@ actionsHelp()
 {
     cat <<-EndActionsHelp
 		  Actions:
-		    done [-d YYYY-MM-DD] <path to file/folder>
-		    d [-d YYYY-MM-DD] <path to file/folder>
-		      Marks an action as closed. 
-		      Choose action to close by path to file or folder.
-		      Allows Wildcards in name of file or folder.
-		      Already closed actions will be newly timestamped.
+            done [-d YYYY-MM-DD] <path to file/folder>
+            d [-d YYYY-MM-DD] <path to file/folder>
+              Marks an action as closed. 
+              Choose action to close by path to file or folder.
+              Allows Wildcards in name of file or folder.
+              Already closed actions will be newly timestamped.
               Use optional parameter -d to set a close date,
               if parameter is not given current date will be used.
+
+            inbox <path to file>
+            i <path to file>
+              Moves a file into the INBOX. 
+              If File does not exist, a new file having that name
+              is created in the INBOX.
 	EndActionsHelp
 }
 
@@ -110,6 +117,16 @@ actionUsage()
     done
 }
 
+dieWithHelp()
+{
+    case "$1" in
+        help)       help;;
+        shorthelp)  shorthelp;;
+    esac
+    shift
+
+    die "$@"
+}
 die()
 {
     echo "$*"
@@ -169,6 +186,7 @@ FTD_PLAIN=${FTD_PLAIN:-0}
 FTD_EMULATE=${FTD_EMULATE:-0}
 FTD_FORCE=${FTD_FORCE:-0}
 FTD_VERBOSE=${FTD_VERBOSE:-1}
+FTD_GLOBAL_CFG_FILE=${FTD_GLOBAL_CFG_FILE:-/etc/ftd.cfg}
 
 # Export all FTD_* variables
 export ${!FTD_@}
@@ -192,6 +210,63 @@ export LIGHT_PURPLE='\\033[1;35m'
 export LIGHT_CYAN='\\033[1;36m'
 export WHITE='\\033[1;37m'
 export DEFAULT='\\033[0m'
+
+# === LOAD CONFIG
+[ -e "$FTD_CFG_FILE" ] || {
+    CFG_FILE_ALT="$HOME/ftd.cfg"
+
+    if [ -e "$CFG_FILE_ALT" ]
+    then
+        FTD_CFG_FILE="$CFG_FILE_ALT"
+    fi
+}
+
+[ -e "$FTD_CFG_FILE" ] || {
+    CFG_FILE_ALT="$HOME/.ftd.cfg"
+
+    if [ -e "$CFG_FILE_ALT" ]
+    then
+        FTD_CFG_FILE="$CFG_FILE_ALT"
+    fi
+}
+
+[ -e "$FTD_CFG_FILE" ] || {
+    CFG_FILE_ALT=$(dirname "$0")"/ftd.cfg"
+
+    if [ -e "$CFG_FILE_ALT" ]
+    then
+        FTD_CFG_FILE="$CFG_FILE_ALT"
+    fi
+}
+
+[ -e "$FTD_CFG_FILE" ] || {
+    CFG_FILE_ALT="$FTD_GLOBAL_CFG_FILE"
+
+    if [ -e "$CFG_FILE_ALT" ]
+    then
+        FTD_CFG_FILE="$CFG_FILE_ALT"
+    fi
+}
+
+# === SANITY CHECKS ===
+[ -r "$FTD_CFG_FILE" ] || dieWithHelp "$1" "Fatal Error: Cannot read configuration file $FTD_CFG_FILE"
+
+. "$FTD_CFG_FILE"
+
+# === STRUCTURE CHECKS ===
+if  [ ! -d $INBOX_DIR ]; then
+    echo "No INBOX Folder '$INBOX_DIR' found. Create it? (y/n)"
+    read ANSWER
+else
+    ANSWER="n"
+fi
+if [ "$ANSWER" = "y" ]; then
+    mkdir $INBOX_DIR
+fi
+if [ "$ANSWER" = "x" ]; then
+    dieWithHelp "$1" "Fatal Error: No INBOX Directory at '$INBOX_DIR'"
+fi
+
 
 # === APPLY OVERRIDES
 if [ -n "$OVR_FTD_FORCE" ] ; then
@@ -239,6 +314,21 @@ case $action in
 	    fi
     	execute "mv '$actionname' '$newactionname'"
     done
+    ;;
+"inbox" | "i")
+    shift    # was "inbox" or "i", next is filename
+    [ -z "$1" ] && die "usage: $FTD_SH inbox <path to file>"
+
+    action_fullname=$INBOX_DIR/$( basename $1)
+    [ -e $action_fullname ] && die "Action '$action_fullname' already exists."
+
+    if [ ! -e "$1" ]; then
+        echo "Creating Action '$1' in INBOX '$INBOX_DIR'"
+        execute "touch $action_fullname"
+    else
+        echo "Moving Action '$1' to INBOX '$INBOX_DIR'"
+        execute "mv '$1' '$action_fullname'"
+    fi
     ;;
 "help" )
     shift  ## Was help; new $1 is first help topic / action name
