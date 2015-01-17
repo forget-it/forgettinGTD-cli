@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Action
+Name[de_AT]=Neue Textdatei anlegen
+Name[de]=Neue Textdatei anlegen
+Icon[de_AT]=accessories-text-editor
+Icon[de]=accessories-text-editor
+TargetContext=false
+TargetLocation=true
+TargetToolbar=true
+ToolbarLabel[de_AT]=Neue Textdatei anlegen
+ToolbarLabel[de]=Neue Textdatei anlegen
+Profiles=profile-zero;
+
+[X-Action-Profile profile-zero]
+Name[de_AT]=Vorgabeprofil
+Name[de]=Vorgabeprofil
+Exec=touch Unbenannt.md
+Path=%d/%b

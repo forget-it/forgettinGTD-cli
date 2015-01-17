@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Action
+Name[de_AT]=erledigt
+Name[de]=erledigt
+Icon[de_AT]=gtk-apply
+Icon[de]=gtk-apply
+ToolbarLabel[de_AT]=erledigt
+ToolbarLabel[de]=erledigt
+Profiles=profile-zero;
+
+[X-Action-Profile profile-zero]
+Name[de_AT]=ftd inbox
+Name[de]=ftd inbox
+Exec=/home/peter/Dropbox/ftd-cli/forgettinGTD-cli/ftd.sh done %b

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Action
+Name[de_AT]=-> INBOX
+Name[de]=-> INBOX
+Icon[de_AT]=add
+Icon[de]=add
+ToolbarLabel[de_AT]=-> INBOX
+ToolbarLabel[de]=-> INBOX
+Profiles=profile-zero;
+
+[X-Action-Profile profile-zero]
+Name[de_AT]=ftd inbox
+Name[de]=ftd inbox
+Exec=/home/peter/Dropbox/ftd-cli/forgettinGTD-cli/ftd.sh inbox %b
