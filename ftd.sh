@@ -140,6 +140,9 @@ execute()
     if [ $FTD_EMULATE = 1 ] ; then
         echo "EMULATE: $1"
     else
+	    if [ $FTD_VERBOSE -gt 0 ]; then
+	    	echo "DEBUG: About to execute command '$1'"
+	    fi
         eval $1
     fi
 }
@@ -311,9 +314,6 @@ case $action in
     	action_filename=$( basename $actionname)
     	echo "Closing Action '$action_filename' in Directory '$action_foldername'..."
     	newactionname=$(printf "%s/x %s %s" "$action_foldername" "$donedate" "$action_filename")
-	    if [ $FTD_VERBOSE -gt 0 ]; then
-	    	echo "Renaming from $actionname to $newactionname"
-	    fi
     	execute "mv '$actionname' '$newactionname'"
     done
     ;;
@@ -321,17 +321,23 @@ case $action in
     shift    # was "inbox" or "i", next is filename
     [ -z "$1" ] && die "usage: $FTD_SH inbox <path to file>"
 
-    action_fullname=$INBOX_DIR/$( basename $1)
-    [ -e $action_fullname ] && die "Action '$action_fullname' already exists."
-
-    if [ ! -e "$1" ]; then
-        echo "Creating Action '$1' in INBOX '$INBOX_DIR'"
-        execute "touch $action_fullname"
-    else
-        echo "Moving Action '$1' to INBOX '$INBOX_DIR'"
-        execute "mv '$1' '$action_fullname'"
-    fi
-    ;;
+    for actionname in $@
+    do
+	    action_fullname=$INBOX_DIR/$( basename $actionname)
+	    if [ -e $action_fullname ]; then
+	    	echo "Action '$action_fullname' already exists. Nothing moved or touched."
+	    	continue
+	    fi
+	     	
+	    if [ ! -e "$actionname" ]; then
+	        echo "Creating Action '$actionname' in INBOX '$INBOX_DIR'"
+	        execute "touch '$action_fullname'"
+	    else
+	        echo "Moving Action '$actionname' to INBOX '$INBOX_DIR'"
+	        execute "mv '$actionname' '$action_fullname'"
+	    fi
+	done
+	;;
 "help" )
     shift  ## Was help; new $1 is first help topic / action name
     if [ $# -gt 0 ]; then
