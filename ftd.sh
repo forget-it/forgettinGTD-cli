@@ -20,6 +20,8 @@ export FTD_SH FTD_FULL_SH
 
 oneline_usage="$FTD_SH [-efhvV] action <path to file/folder>"
 
+IFS=$(echo -en "\n\b")
+
 usage()
 {
     cat <<-EndUsage
