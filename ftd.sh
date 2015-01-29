@@ -38,8 +38,9 @@ shorthelp()
 
 		  Actions:
             done|d [-d <YYYY-MM-DD>] <path to file/folder>
-            inbox|i <path to file>
 		    help [ACTION...]
+            inbox|i <path to file>
+            list|l <search pattern>
 		    shorthelp
 	EndHelp
 	exit 0
@@ -87,20 +88,26 @@ actionsHelp()
 {
     cat <<-EndActionsHelp
 		  Actions:
-            done [-d YYYY-MM-DD] <path to file/folder>
-            d [-d YYYY-MM-DD] <path to file/folder>
-              Marks an action as closed. 
-              Choose action to close by path to file or folder.
-              Allows Wildcards in name of file or folder.
-              Already closed actions will be newly timestamped.
-              Use optional parameter -d to set a close date,
-              if parameter is not given current date will be used.
+    done [-d YYYY-MM-DD] <path to file/folder>
+    d [-d YYYY-MM-DD] <path to file/folder>
+      Marks an action as closed. 
+      Choose action to close by path to file or folder.
+      Allows Wildcards in name of file or folder.
+      Already closed actions will be newly timestamped.
+      Use optional parameter -d to set a close date,
+      if parameter is not given current date will be used.
 
-            inbox <path to file>
-            i <path to file>
-              Moves a file into the INBOX. 
-              If File does not exist, a new file having that name
-              is created in the INBOX.
+    inbox <path to file>
+    i <path to file>
+      Moves a file into the INBOX. 
+      If File does not exist, a new file having that name
+      is created in the INBOX.
+
+    list <search pattern>
+    l <search pattern>
+      Lists all actions matching the given search pattern.
+      Use keywords AND, OR and NOT to combine space 
+      separated terms. Space between terms defaults to AND
 	EndActionsHelp
 }
 
@@ -114,7 +121,7 @@ actionUsage()
             echo "$builtinActionUsage"
             echo
         else
-            die "TODO: No action \"${actionName}\" exists."
+            die "FTD: No action \"${actionName}\" exists."
         fi
     done
 }
@@ -316,6 +323,11 @@ case $action in
     	newactionname=$(printf "%s/x %s %s" "$action_foldername" "$donedate" "$action_filename")
     	execute "mv '$actionname' '$newactionname'"
     done
+    ;;
+"list" | "l")
+    shift    # was "list" or "l", next is filename
+
+    echo "todo: implement"
     ;;
 "inbox" | "i")
     shift    # was "inbox" or "i", next is filename
